@@ -36,7 +36,7 @@ class LogParser{
         }
     }
 
-    def Matcher resetMatcher(String subject){
+    def resetMatcher(String subject){
         if(m != null)
             m.reset(subject)
         else
@@ -45,8 +45,13 @@ class LogParser{
 
     static void main(String[] args) {
         LogParser lp = new LogParser();
+        //TODO capture file from args
         Set results = lp.parseFile('testData/secmgr.log')
         println "saved permissions: " + results.size()
+        Grouper g = new Grouper(results)
+        g.permissionByModule.keySet().each{
+            println it
+        }
     }
 
     def testRegex(String testString){
