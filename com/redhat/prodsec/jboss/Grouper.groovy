@@ -3,8 +3,8 @@ package com.redhat.prodsec.jboss
 import com.redhat.prodsec.jboss.Permission
 
 class Grouper{
-    Set permissions
-    Map permissionByModule
+    private Set permissions
+    Map permissionsByModule
 
     static{
         testGrouper()
@@ -13,7 +13,11 @@ class Grouper{
     Grouper(Set permissions){
         assert permissions != null
         this.permissions = permissions
-        this.permissionByModule = permissions.groupBy({perm -> perm.module})
+        def mapOfLists = permissions.groupBy({perm -> perm.module})
+        permissionsByModule = new LinkedHashMap(mapOfLists.size())
+        mapOfLists.keySet().each(){
+            permissionsByModule.put(it, mapOfLists.get(it).toSet())
+        }
     }
 
     static def testGrouper(){
@@ -28,10 +32,15 @@ class Grouper{
             "setClassLoader",
             null)
         )
+        testSet.add(createPerm("org/jboss/as/jpa",
+            "java.lang.RuntimePermission",
+            "setClassLoader",
+            null)
+        )
         Grouper grouper = new Grouper(testSet)
-        assert grouper.permissionByModule.size() == 1
-        List jpaPermissions = grouper.permissionByModule.get("org/jboss/as/jpa")
-        assert jpaPermissions instanceof ArrayList
+        assert grouper.permissionsByModule.size() == 1
+        Set jpaPermissions = grouper.permissionsByModule.get("org/jboss/as/jpa")
+        assert jpaPermissions instanceof HashSet
         assert jpaPermissions.size() == 2
     }
 

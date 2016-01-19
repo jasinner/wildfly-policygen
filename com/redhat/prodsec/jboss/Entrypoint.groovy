@@ -11,11 +11,18 @@ class EntryPoint{
             System.exit(1)
         }
         def results = parseLog(args[0])
+        createGrouper(results)
+    }
+
+    static private createGrouper(Set results){
         def g = new Grouper(results)
         def xmlMan = new XmlManipulator()
-        g.permissionByModule.keySet().each{
+        g.permissionsByModule.keySet().each{
             Node root = xmlMan.readExistingModule(it)
-            println "$it has permisions " + xmlMan.hasPermissions(root)
+            if(xmlMan.hasPermissions(root)){
+                def existingPerms = xmlMan.buildPermissions(root)
+                g.permissionsByModule.get(it).addAll(existingPerms)
+            }
         }
     }
 
