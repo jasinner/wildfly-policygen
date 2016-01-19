@@ -35,10 +35,10 @@ class Grouper{
         assert jpaPermissions.size() == 2
     }
 
-    static def Permission createPerm(String module, String clazz, String permission, String action){
+    static def Permission createPerm(String module, String clazz, String name, String action){
         return new Permission(module: module,
                             clazz: clazz,
-                            permission: permission,
+                            name: name,
                             action: action
                             )
     }
