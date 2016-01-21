@@ -2,10 +2,10 @@ package com.redhat.prodsec.jboss
 
 import groovy.xml.QName
 
-class XmlManipulator{
+class ModuleUtil{
     private static final MODULE_PREFIX = '/modules/system/layers/base/'
     private static final MODULE_SUFFIX = '/main/module.xml'
-    private static final EAP_HOME;
+    public static final EAP_HOME;
 
     private static final String MODULE_WITH_PERMISSIONS = 'testData/'
 
@@ -16,12 +16,29 @@ class XmlManipulator{
     }
 
     def Node readExistingModule(String modulePath){
+        def moduleFile = getModuleFile(modulePath)
         def parser = new XmlParser()
-        def moduleFile = new File(EAP_HOME + MODULE_PREFIX + modulePath + MODULE_SUFFIX)
-        assert moduleFile.isFile()
         def module = parser.parse(moduleFile)
         assert module.name().toString() == "{urn:jboss:module:1.3}module"
         return module
+    }
+
+    def File getModuleFile(String modulePath){
+        def moduleFile = new File(EAP_HOME + MODULE_PREFIX + modulePath + MODULE_SUFFIX)
+        assert moduleFile.isFile()
+        return moduleFile;
+    }
+
+    def Node updatePerms(String module, Set newPermissions){
+        def node = readExistingModule(module)
+        if(hasPermissions(node)){
+            node = removePermissions(node)
+        }
+        node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
+        newPermissions.each{ perm->
+            perm.asNode(node.permissions)
+        }
+        return node
     }
 
     def boolean hasPermissions(Node root){
@@ -29,7 +46,16 @@ class XmlManipulator{
         return permissions.size() > 0
     }
 
-    def NodeList getPermissionsNode(Node root){
+    private Node removePermissions(Node root){
+        NodeList permissionNodes = getPermissionsNode(root)
+        Iterator nodeIter = permissionNodes.iterator()
+        while(nodeIter.hasNext()){
+            root.remove(nodeIter.next())
+        }
+        return root
+    }
+
+    private NodeList getPermissionsNode(Node root){
         return root.getAt(new QName("urn:jboss:module:1.3", "permissions"))
     }
 
@@ -45,5 +71,6 @@ class XmlManipulator{
                 action: it.@actions)
             )
         }
+        return results
     }
 }

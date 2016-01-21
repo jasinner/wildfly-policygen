@@ -11,19 +11,35 @@ class EntryPoint{
             System.exit(1)
         }
         def results = parseLog(args[0])
-        createGrouper(results)
+        writeToModules(buildPermissionsMap(results))
     }
 
-    static private createGrouper(Set results){
-        def g = new Grouper(results)
-        def xmlMan = new XmlManipulator()
-        g.permissionsByModule.keySet().each{
-            Node root = xmlMan.readExistingModule(it)
-            if(xmlMan.hasPermissions(root)){
-                def existingPerms = xmlMan.buildPermissions(root)
-                g.permissionsByModule.get(it).addAll(existingPerms)
-            }
+    static private writeToModules(Map moduleDefinitions){
+        def modUtil = new ModuleUtil()
+        moduleDefinitions.keySet().each{ module->
+            XmlPrinter.printNode(moduleDefinitions.get(module), modUtil.getModuleFile(module))
         }
+    }
+
+    static private buildPermissionsMap(Set results){
+        def g = new Grouper(results)
+        Map moduleDefinitions = new HashMap(g.permissionsByModule.keySet().size())
+        g.permissionsByModule.keySet().each{ module->
+            Node document = combineExistingModule(module, g.permissionsByModule)
+            moduleDefinitions.put(module, document)
+        }
+        return moduleDefinitions;
+    }
+
+    static private combineExistingModule(String module, Map permissionsMap){
+        def modUtil = new ModuleUtil()
+        Node root = modUtil.readExistingModule(module)
+        Set permissions = permissionsMap.get(module)
+        if(modUtil.hasPermissions(root)){
+            def existingPerms = modUtil.buildPermissions(root)
+            permissions.addAll(existingPerms)
+        }
+        return modUtil.updatePerms(module, permissions)
     }
 
     static private Set parseLog(String logFile){

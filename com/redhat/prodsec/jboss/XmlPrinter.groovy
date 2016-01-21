@@ -1,20 +1,18 @@
 package com.redhat.prodsec.jboss
 
-import com.redhat.prodsec.Grouper
+import groovy.xml.XmlUtil
+import javax.xml.parsers.SAXParser
+import javax.xml.XMLConstants
+import org.xml.sax.InputSource
 
-class XmlPrinter(){
-    Node root
+class XmlPrinter{
 
-    static{
-        
+    static def printNode(Node root, File moduleFile){
+        def outstream = new FileOutputStream(moduleFile, false)
+        XmlUtil.serialize(root, outstream)
     }
 
-    XmlPrinter(String xmlText){
-        def parser = new XmlParser()
-        module = parser.parseText(xmlText)
-    }
-
-    def String printModule(){
+    static public String printNode(Node root){
         return XmlUtil.serialize(root)
     }
 }

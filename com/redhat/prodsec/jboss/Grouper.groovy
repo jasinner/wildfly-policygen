@@ -13,7 +13,10 @@ class Grouper{
     Grouper(Set permissions){
         assert permissions != null
         this.permissions = permissions
-        def mapOfLists = permissions.groupBy({perm -> perm.module})
+        remoteDuplicates(permissions.groupBy({perm -> perm.module}))
+    }
+
+    private def remoteDuplicates(Map mapOfLists){
         permissionsByModule = new LinkedHashMap(mapOfLists.size())
         mapOfLists.keySet().each(){
             permissionsByModule.put(it, mapOfLists.get(it).toSet())
