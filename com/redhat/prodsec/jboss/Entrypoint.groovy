@@ -11,7 +11,8 @@ class EntryPoint{
             System.exit(1)
         }
         def results = parseLog(args[0])
-        writeToModules(buildPermissionsMap(results))
+        def persister = new Persister()
+        //writeToModules(buildPermissionsMap(results))
     }
 
     static private writeToModules(Map moduleDefinitions){
