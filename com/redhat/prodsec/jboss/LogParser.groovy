@@ -10,6 +10,7 @@ class LogParser{
     private static Pattern p = ~/(?i)permission\s"\("(?<clazz>[^"]*+)"\s"(?<name>((?!"\s).)+)"(?:\s"(?<action>[^"]*+)")?\)[\sa-zA-Z:\/\("-]*modules\/system\/layers\/base\/(?<module>[a-z\/]*)\/main/
     private Matcher m = null
 
+
     static{
         testRegex('2016-01-22 14:05:32,958 DEBUG [org.wildfly.security.access] (MSC service thread 1-4) Permission check failed (permission "("org.jboss.as.server.security.ServerPermission" "setCurrentServiceContainer")" in code source "(jar:file:/Users/jasonshepherd/products/middleware-product-distributions/modules/system/layers/base/org/jboss/msc/main/jboss-msc-1.2.6.Final-redhat-1.jar!/ <no signer certificates>)" of "null")')
         testRegex('(permission "("java.lang.RuntimePermission" "setClassLoader")" in code source "(jar:file:/home/jshepher/apps/product-distributions/modules/system/layers/base/org/jboss/as/controller/main/wildfly-controller-2.0.3.Final-redhat-1.jar!/')
@@ -31,10 +32,10 @@ class LogParser{
         resetMatcher(line)
         while(m.find()){
             results.add(
-                new Permission(module: m.group('module'),
-                    clazz: m.group('clazz'),
-                    name: m.group('name'),
-                    action: m.group('action')
+                new Permission(m.group('module'),
+                    m.group('clazz'),
+                    m.group('name'),
+                    m.group('action')
                 )
             )
         }
