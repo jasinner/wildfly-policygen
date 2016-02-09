@@ -1,4 +1,4 @@
-package com.redhat.prodsec.jboss
+package com.redhat.prodsec.eap
 
 import groovy.xml.XmlUtil
 import javax.xml.parsers.SAXParser

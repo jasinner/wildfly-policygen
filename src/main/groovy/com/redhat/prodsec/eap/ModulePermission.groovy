@@ -1,23 +1,23 @@
-package com.redhat.prodsec.jboss
+package com.redhat.prodsec.eap
 
 import groovy.transform.EqualsAndHashCode
 import java.security.Permission
 import java.lang.reflect.Constructor
 
 @EqualsAndHashCode
-class Permission{
+class ModulePermission{
 
     String module
 
-    java.security.Permission permission
+    Permission permission
 
-    public Permission(String module, String permissionClass, String name, String actions){
+    public ModulePermission(String module, String permissionClass, String name, String actions){
         System.out.println("permission called with: " + module + permissionClass + name + actions);
         this.module = module
-        Class<? extends java.security.Permission> clazz;
+        Class<? extends Permission> clazz;
         try{
             clazz = Class.forName(permissionClass)
-            this.permission = Permission.constructFromClass(clazz, name, actions)
+            this.permission = ModulePermission.constructFromClass(clazz, name, actions)
         } catch(ClassNotFoundException c){
             //Not a class shipped with JSE, just store Permission class name as String
             this.permission = new GenericPermission(permissionClass, name, actions)
@@ -32,12 +32,12 @@ class Permission{
         return new Node(parent, "grant", attributes)
     }
 
-    static java.security.Permission constructFromClass(Class permissionClass, String targetName, String permissionActions){
-        final Constructor<? extends java.security.Permission> constructor;
+    static Permission constructFromClass(Class permissionClass, String targetName, String permissionActions){
+        final Constructor<? extends Permission> constructor;
         boolean hasTarget = targetName != null && ! targetName.isEmpty();
         boolean hasAction = permissionActions != null && ! permissionActions.isEmpty();
         if (hasTarget && hasAction) {
-            Constructor<? extends java.security.Permission> test;
+            Constructor<? extends Permission> test;
             try {
                 test = permissionClass.getConstructor(String.class, String.class);
             } catch (NoSuchMethodException ignored) {
@@ -53,7 +53,7 @@ class Permission{
             constructor = test;
         } else if (hasTarget) {
             assert ! hasAction;
-            Constructor<? extends java.security.Permission> test;
+            Constructor<? extends Permission> test;
             try {
                 test = permissionClass.getConstructor(String.class);
             } catch (NoSuchMethodException ignored) {

@@ -1,4 +1,4 @@
-package com.redhat.prodsec.jboss
+package com.redhat.prodsec.eap
 
 import com.redhat.prodsec.*
 
@@ -11,7 +11,6 @@ class EntryPoint{
             System.exit(1)
         }
         def results = parseLog(args[0])
-        def persister = new Persister()
         //writeToModules(buildPermissionsMap(results))
     }
 

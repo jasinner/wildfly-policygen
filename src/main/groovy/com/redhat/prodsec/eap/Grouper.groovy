@@ -1,6 +1,6 @@
-package com.redhat.prodsec.jboss
+package com.redhat.prodsec.eap
 
-import com.redhat.prodsec.jboss.Permission
+import com.redhat.prodsec.eap.ModulePermission
 
 class Grouper{
     private Set permissions
@@ -47,8 +47,8 @@ class Grouper{
         assert jpaPermissions.size() == 2
     }
 
-    static def Permission createPerm(String module, String clazz, String name, String action){
-        return new Permission(module: module,
+    static def ModulePermission createPerm(String module, String clazz, String name, String action){
+        return new ModulePermission(module: module,
                             clazz: clazz,
                             name: name,
                             action: action

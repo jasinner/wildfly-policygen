@@ -1,4 +1,4 @@
-package com.redhat.prodsec.jboss
+package com.redhat.prodsec.eap
 
 import groovy.xml.QName
 
@@ -65,7 +65,7 @@ class ModuleUtil{
         def grants = root.permissions.grant
         Set results = new HashSet()
         grants.each{
-            results.add(new Permission(module:"module",
+            results.add(new ModulePermission(module:"module",
                 clazz: it.@permission,
                 name: it.@name,
                 action: it.@actions)
