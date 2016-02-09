@@ -1,6 +1,8 @@
 package com.redhat.prodsec.eap
 
+import groovy.util.Node;
 import groovy.xml.QName
+import java.security.Permission
 
 class ModuleUtil{
     private static final MODULE_PREFIX = '/modules/system/layers/base/'
@@ -23,23 +25,30 @@ class ModuleUtil{
         return module
     }
 
-    def File getModuleFile(String modulePath){
+    public static File getModuleFile(String modulePath){
         def moduleFile = new File(EAP_HOME + MODULE_PREFIX + modulePath + MODULE_SUFFIX)
         assert moduleFile.isFile()
         return moduleFile;
     }
 
-    def Node updatePerms(String module, Set newPermissions){
+    def Node addPerms(String module, Set<Permission> newPermissions){
         def node = readExistingModule(module)
-        if(hasPermissions(node)){
-            node = removePermissions(node)
-        }
+        assert !hasPermissions(node)
         node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
         newPermissions.each{ perm->
-            perm.asNode(node.permissions)
+            asNode(perm, node.permissions)
         }
         return node
     }
+	
+	private static Node asNode(Permission permission, Node parent){
+		Map attributes = [permission.getClass().getName(), permission.getName()]
+		def actions = permission.getActions()
+		if(actions != null){
+			attributes.put("actions", actions)
+		}
+		return new Node(parent, "grant", attributes)
+	}
 
     def boolean hasPermissions(Node root){
         NodeList permissions = getPermissionsNode(root)
@@ -59,16 +68,19 @@ class ModuleUtil{
         return root.getAt(new QName("urn:jboss:module:1.3", "permissions"))
     }
 
-    def Set buildPermissions(Node root){
-        assert hasPermissions(root)
+    public Set<Permission> buildPermissions(String moduleName){
+		Node root = readExistingModule(moduleName)
+        if(!(hasPermissions(root)))
+			return null
         String module = root.@name
         def grants = root.permissions.grant
-        Set results = new HashSet()
+        Set results = new HashSet<Permission>()
         grants.each{
-            results.add(new ModulePermission(module:"module",
-                clazz: it.@permission,
-                name: it.@name,
-                action: it.@actions)
+            results.add(new PermissionFactory(
+				module,
+                it.@permission,
+                it.@name,
+                it.@actions)
             )
         }
         return results

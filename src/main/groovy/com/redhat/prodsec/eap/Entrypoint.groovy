@@ -1,52 +1,48 @@
 package com.redhat.prodsec.eap
 
 import com.redhat.prodsec.*
+import java.security.Permission
+import java.security.Permissions
 
 class EntryPoint{
 
 
-    static void main(String[] args) {
-        if(args.length < 1){
-            println("Usage 'groovy com/redhat/prodsec/jboss/Entrypoint.groovy <logpath>'")
-            System.exit(1)
-        }
-        def results = parseLog(args[0])
-        //writeToModules(buildPermissionsMap(results))
-    }
+	static void main(String[] args) {
+		if(args.length < 1){
+			println("Usage 'groovy com/redhat/prodsec/jboss/Entrypoint.groovy <logpath>'")
+			System.exit(1)
+		}
+		Map<String, Set<Permission>> results = parseLog(args[0])
+		def moduleToUpdate = results.keySet()
+		moduleToUpdate.each{ module ->
+			Node moduleNode;
+			Set<Permission> existingPerms = ModUtil.buildPermissions(module)
+			if(existingPerms == null){
+				moduleNode = ModUtil.addPerms(result.get(it))
+			}else{
+				boolean implies = false
+				existingPerms.each{ existingPerm ->
+					result.get(module).each(){
+						-> loggedPermission{
+							if(existingPerm.implies(loggedPermision))
+								implies = true
+						}
+						if(!implies){
+							existingPerms.add(loggedPermission)
+							implies = false;
+						}
+					}
+					moduleNode = ModUtil.addPerms(existingPerms)
+				}
+				XmlPrinter.printNode(moduleNode, ModUtil.getModuleFile(module))
+			}
+		}
+	}
 
-    static private writeToModules(Map moduleDefinitions){
-        def modUtil = new ModuleUtil()
-        moduleDefinitions.keySet().each{ module->
-            XmlPrinter.printNode(moduleDefinitions.get(module), modUtil.getModuleFile(module))
-        }
-    }
-
-    static private buildPermissionsMap(Set results){
-        def g = new Grouper(results)
-        Map moduleDefinitions = new HashMap(g.permissionsByModule.keySet().size())
-        g.permissionsByModule.keySet().each{ module->
-            Node document = combineExistingModule(module, g.permissionsByModule)
-            moduleDefinitions.put(module, document)
-        }
-        return moduleDefinitions;
-    }
-
-    static private combineExistingModule(String module, Map permissionsMap){
-        def modUtil = new ModuleUtil()
-        Node root = modUtil.readExistingModule(module)
-        Set permissions = permissionsMap.get(module)
-        if(modUtil.hasPermissions(root)){
-            def existingPerms = modUtil.buildPermissions(root)
-            permissions.addAll(existingPerms)
-        }
-        return modUtil.updatePerms(module, permissions)
-    }
-
-    static private Set parseLog(String logFile){
-        assert new File(logFile).isFile()
-        def lp = new LogParser();
-        Set results = lp.parseFile(logFile)
-        println "saved permissions: " + results.size()
-        return results;
-    }
+	static private Permissions parseLog(String logFile){
+		assert new File(logFile).isFile()
+		Set results = LogParser.parseFile(logFile)
+		println "saved permissions: " + results.size()
+		return results;
+	}
 }

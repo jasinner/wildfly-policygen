@@ -1,6 +1,7 @@
 package com.redhat.prodsec.eap
+import java.security.Permission
+import java.security.Permissions
 import java.util.regex.*
-import com.redhat.prodsec.eap.ModulePermission
 
 class LogParser{
     //https://regex101.com/r/dT1bV4/3
@@ -10,24 +11,31 @@ class LogParser{
     private Matcher m = null
 
 
-    def Set parseFile(String fileName){
-        Set results = new HashSet()
+    public static Map<String, Set<Permission>> parseFile(String fileName){
+        Map<String, Set<Permission>> results = new HashMap<String, Set<Permission>>()
         new File(fileName).eachLine {
             line -> parseLine(line, results)
         }
         return results;
     }
 
-    def void parseLine(String line, Set results){
+    private  parseLine(String line, Map<String, Permissions> results){
         resetMatcher(line)
         while(m.find()){
-            results.add(
-                new ModulePermission(m.group('module'),
-                    m.group('clazz'),
-                    m.group('name'),
-                    m.group('action')
-                )
-            )
+			def module = m.group('module')
+			def perm = PermissionsFactory.createPermission(
+				m.group('clazz'),
+				m.group('name'),
+				m.group('action'))
+			def perms = result.get(module)
+			if(perms == null){
+				def newPerms = new Permissions()
+				newPerms.add(perm)			
+				results.put(module, newPerms)
+			}
+			else{
+				perms.add(perm)
+			}
         }
     }
 
