@@ -17,7 +17,7 @@ class ModuleUtil{
         assert new File(EAP_HOME).isDirectory()
     }
 
-    def Node readExistingModule(String modulePath){
+    def static Node readExistingModule(String modulePath){
         def moduleFile = getModuleFile(modulePath)
         def parser = new XmlParser()
         def module = parser.parse(moduleFile)
@@ -31,7 +31,7 @@ class ModuleUtil{
         return moduleFile;
     }
 
-    def Node addPerms(String module, Set<Permission> newPermissions){
+    def static Node addPerms(String module, Set<Permission> newPermissions){
         def node = readExistingModule(module)
         assert !hasPermissions(node)
         node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
@@ -40,22 +40,26 @@ class ModuleUtil{
         }
         return node
     }
-	
-	private static Node asNode(Permission permission, Node parent){
-		Map attributes = [permission.getClass().getName(), permission.getName()]
+
+	private static Node asNode(Permission permission, NodeList parent){
+		Map attributes = ["permission": permission.getClass().getName(),
+		  "name": permission.getName()]
 		def actions = permission.getActions()
 		if(actions != null){
 			attributes.put("actions", actions)
 		}
-		return new Node(parent, "grant", attributes)
+		assert parent.size() == 1
+		def permissionNode = parent.iterator().next()
+		return new Node(permissionNode, "grant", attributes)
 	}
 
-    def boolean hasPermissions(Node root){
+    def static boolean hasPermissions(Node root){
         NodeList permissions = getPermissionsNode(root)
         return permissions.size() > 0
     }
 
-    private Node removePermissions(Node root){
+    def static Node removePermissions(String module){
+        def root = readExistingModule(module)
         NodeList permissionNodes = getPermissionsNode(root)
         Iterator nodeIter = permissionNodes.iterator()
         while(nodeIter.hasNext()){
@@ -64,11 +68,11 @@ class ModuleUtil{
         return root
     }
 
-    private NodeList getPermissionsNode(Node root){
+    private static NodeList getPermissionsNode(Node root){
         return root.getAt(new QName("urn:jboss:module:1.3", "permissions"))
     }
 
-    public Set<Permission> buildPermissions(String moduleName){
+    def static Set<Permission> buildPermissions(String moduleName){
 		Node root = readExistingModule(moduleName)
         if(!(hasPermissions(root)))
 			return null
@@ -76,8 +80,7 @@ class ModuleUtil{
         def grants = root.permissions.grant
         Set results = new HashSet<Permission>()
         grants.each{
-            results.add(new PermissionFactory(
-				module,
+            results.add(PermissionFactory.createPermission(
                 it.@permission,
                 it.@name,
                 it.@actions)

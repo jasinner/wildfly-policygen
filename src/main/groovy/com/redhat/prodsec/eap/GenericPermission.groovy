@@ -13,8 +13,8 @@ public class GenericPermission extends Permission{
     public GenericPermission(String clazz, String name, String actions){
         super(name);
         this.clazz = clazz;
-		
-        this.actions = actions.tokenize(",");
+        if(actions != null)
+            this.actions = actions.tokenize(",");
     }
 	
 	@Override
@@ -26,7 +26,7 @@ public class GenericPermission extends Permission{
 		def otherPerm = (GenericPermission) other
 		if (getName() != otherPerm.getName()) return false
 		if (clazz != otherPerm.clazz) return false
-		if (actions != otherPerm.actions) return false
+		if (getActions() != otherPerm.getActions()) return false
 		return true
 	}
 	
@@ -42,21 +42,28 @@ public class GenericPermission extends Permission{
     public boolean implies(Permission perm){
         if(perm == null) return false
 		if(this.is(perm)) return true
-		if (getName() != otherPerm.getName()) return false
+		if (getName() != perm.getName()) return false
 		if (!(perm instanceof GenericPermission)) return false
-		def otherPerm = (GenericPermission) perm
 		if(clazz != perm.clazz) return false
-		if(actions.contains(perm)) return true
+        def genericPerm = (GenericPermission) perm
+		if(actions.containsAll(perm.getActionsList())) return true
         return false
+    }
+    
+    public List<String> getActionsList(){
+        return this.actions;
     }
 
     @Override
     public String getActions(){
+        if(actions == null) return
 		def sb = new StringBuilder();
 		actions.each() {
 			sb.append(it).append(',')
 		}
-        return sb.toString().substring(0, sb.length() -  1);
+		def newActions = sb.toString()
+		println("new Actions ${newActions}")
+        return newActions.substring(0, sb.length() -  1);
     }
 	
     private boolean canEqual(java.lang.Object other) {

@@ -11,3 +11,9 @@ dependencies {
 dependencies {
     testCompile "org.codehaus.groovy:groovy:2.4.4", "junit:junit:4.12"
 }
+
+task runScript (dependsOn: 'classes', type: JavaExec) {
+    main = 'com.redhat.prodsec.eap.EntryPoint'
+    classpath = sourceSets.main.runtimeClasspath
+    args 'src/test/resources/secmgr.log'
+}

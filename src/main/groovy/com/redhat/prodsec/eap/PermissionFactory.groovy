@@ -4,18 +4,19 @@ import java.lang.reflect.Constructor
 import java.security.Permission
 
 class PermissionFactory {
-	def Permission createPermision(String permissionClass, String name, String actions){
+
+	def static Permission createPermission(String permissionClass, String name, String actions){
 		Class<? extends Permission> clazz;
 		try{
 			clazz = Class.forName(permissionClass)
-			this.permission = constructFromClass(clazz, name, actions)
+			 return constructFromClass(clazz, name, actions)
 		} catch(ClassNotFoundException c){
 			//Not a class shipped with JSE, just store Permission class name as String
-			this.permission = new GenericPermission(permissionClass, name, actions)
+			return new GenericPermission(permissionClass, name, actions)
 		}
 	}
 	
-	private Permission constructFromClass(Class permissionClass, String targetName, String permissionActions){
+	static private Permission constructFromClass(Class permissionClass, String targetName, String permissionActions){
 		final Constructor<? extends Permission> constructor;
 		boolean hasTarget = targetName != null && ! targetName.isEmpty();
 		boolean hasAction = permissionActions != null && ! permissionActions.isEmpty();
