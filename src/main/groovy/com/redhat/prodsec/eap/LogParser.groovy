@@ -29,7 +29,7 @@ class LogParser{
 			def perms = results.get(module)
 			if(perms == null){
 				def newPerms = new HashSet<Permission>();
-				newPerms.add(perm)			
+				newPerms.add(perm)
 				results.put(module, newPerms)
 			}
 			else{

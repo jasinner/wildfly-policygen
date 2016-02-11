@@ -16,7 +16,7 @@ public class GenericPermission extends Permission{
         if(actions != null)
             this.actions = actions.tokenize(",");
     }
-	
+
 	@Override
 	public boolean equals(Object other){
 		if (other == null) return false
@@ -29,7 +29,7 @@ public class GenericPermission extends Permission{
 		if (getActions() != otherPerm.getActions()) return false
 		return true
 	}
-	
+
 	@Override
 	public int hashCode(){
 		int hashcode = HashCodeHelper.initHash()
@@ -37,7 +37,7 @@ public class GenericPermission extends Permission{
 		hashcode = HashCodeHelper.updateHash(hashcode, clazz)
 		return HashCodeHelper.updateHash(hashcode, actions)
 	}
-	
+
     @Override
     public boolean implies(Permission perm){
         if(perm == null) return false
@@ -45,11 +45,14 @@ public class GenericPermission extends Permission{
 		if (getName() != perm.getName()) return false
 		if (!(perm instanceof GenericPermission)) return false
 		if(clazz != perm.clazz) return false
-        def genericPerm = (GenericPermission) perm
-		if(actions.containsAll(perm.getActionsList())) return true
+        if(actions == null && perm.getActionsList() == null) return true
+        if(actions != null) {
+		      if(actions.containsAll(perm.getActionsList()))
+                return true
+        }
         return false
     }
-    
+
     public List<String> getActionsList(){
         return this.actions;
     }
@@ -65,7 +68,7 @@ public class GenericPermission extends Permission{
 		println("new Actions ${newActions}")
         return newActions.substring(0, sb.length() -  1);
     }
-	
+
     private boolean canEqual(java.lang.Object other) {
     	return other instanceof GenericPermission
     }

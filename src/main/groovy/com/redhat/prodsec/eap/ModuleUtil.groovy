@@ -3,7 +3,9 @@ package com.redhat.prodsec.eap
 import groovy.util.Node;
 import groovy.xml.QName
 import java.security.Permission
+import groovy.util.logging.Log
 
+@Log
 class ModuleUtil{
     private static final MODULE_PREFIX = '/modules/system/layers/base/'
     private static final MODULE_SUFFIX = '/main/module.xml'
@@ -15,6 +17,8 @@ class ModuleUtil{
         EAP_HOME = System.env.'EAP_HOME'
         assert EAP_HOME != null
         assert new File(EAP_HOME).isDirectory()
+        System.setProperty('jboss.home.dir', EAP_HOME)
+        log.info("Set System Property 'jboss.home.dir' to ${EAP_HOME}")
     }
 
     def static Node readExistingModule(String modulePath){
@@ -33,8 +37,9 @@ class ModuleUtil{
 
     def static Node addPerms(String module, Set<Permission> newPermissions){
         def node = readExistingModule(module)
-        assert !hasPermissions(node)
-        node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
+        if (noOfPermissions(node) == 0) {
+            node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
+        }
         newPermissions.each{ perm->
             asNode(perm, node.permissions)
         }
@@ -42,7 +47,12 @@ class ModuleUtil{
     }
 
 	private static Node asNode(Permission permission, NodeList parent){
-		Map attributes = ["permission": permission.getClass().getName(),
+        def clazz
+        if(permission instanceof GenericPermission)
+            clazz = permission.clazz
+        else
+            clazz = permission.getClass().getName()
+        Map attributes = ["permission": clazz,
 		  "name": permission.getName()]
 		def actions = permission.getActions()
 		if(actions != null){
@@ -53,9 +63,10 @@ class ModuleUtil{
 		return new Node(permissionNode, "grant", attributes)
 	}
 
-    def static boolean hasPermissions(Node root){
+    def static int noOfPermissions(Node root){
         NodeList permissions = getPermissionsNode(root)
-        return permissions.size() > 0
+        return permissions.size()
+
     }
 
     def static Node removePermissions(String module){
@@ -74,7 +85,7 @@ class ModuleUtil{
 
     def static Set<Permission> buildPermissions(String moduleName){
 		Node root = readExistingModule(moduleName)
-        if(!(hasPermissions(root)))
+        if(noOfPermissions(root) == 0)
 			return null
         String module = root.@name
         def grants = root.permissions.grant
