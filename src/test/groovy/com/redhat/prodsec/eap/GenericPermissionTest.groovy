@@ -5,6 +5,7 @@ class GenericPermissionTest extends GroovyTestCase{
 
 	@Override
 	public void setUp(){
+        super.setUp();
 		permA = new GenericPermission("class", "name", "actions")
 		permB = new GenericPermission("class", "nameB", "actions")
 		permC = new GenericPermission("class", "name", null)

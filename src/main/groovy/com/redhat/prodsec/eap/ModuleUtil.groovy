@@ -4,21 +4,24 @@ import groovy.util.Node;
 import groovy.xml.QName
 import java.security.Permission
 import groovy.util.logging.Log
+import org.jboss.modules.xml.PolicyExpander
 
 @Log
 class ModuleUtil{
     private static final MODULE_PREFIX = '/modules/system/layers/base/'
     private static final MODULE_SUFFIX = '/main/module.xml'
-    public static final EAP_HOME;
-
+    private static final String JBOSS_HOME_KEY = 'JBOSS_HOME'
     private static final String MODULE_WITH_PERMISSIONS = 'testData/'
 
+    public static final JBOSS_HOME;
+
+
     static{
-        EAP_HOME = System.env.'EAP_HOME'
-        assert EAP_HOME != null
-        assert new File(EAP_HOME).isDirectory()
-        System.setProperty('jboss.home.dir', EAP_HOME)
-        log.info("Set System Property 'jboss.home.dir' to ${EAP_HOME}")
+        JBOSS_HOME = System.getenv(JBOSS_HOME_KEY)
+        assert JBOSS_HOME != null
+        assert new File(JBOSS_HOME).isDirectory()
+        System.setProperty('jboss.home.dir', JBOSS_HOME)
+        log.info("Set System Property 'jboss.home.dir' to ${JBOSS_HOME}")
     }
 
     def static Node readExistingModule(String modulePath){
@@ -30,7 +33,7 @@ class ModuleUtil{
     }
 
     public static File getModuleFile(String modulePath){
-        def moduleFile = new File(EAP_HOME + MODULE_PREFIX + modulePath + MODULE_SUFFIX)
+        def moduleFile = new File(JBOSS_HOME + MODULE_PREFIX + modulePath + MODULE_SUFFIX)
         assert moduleFile.isFile()
         return moduleFile;
     }
@@ -52,8 +55,12 @@ class ModuleUtil{
             clazz = permission.clazz
         else
             clazz = permission.getClass().getName()
+        def collapsedName = permission.getName();
+        if(clazz.equals('java.io.FilePermission')){
+            collapsedName = collapse(collapsedName)
+        }
         Map attributes = ["permission": clazz,
-		  "name": permission.getName()]
+		  "name": collapsedName]
 		def actions = permission.getActions()
 		if(actions != null){
 			attributes.put("actions", actions)
@@ -63,6 +70,11 @@ class ModuleUtil{
 		return new Node(permissionNode, "grant", attributes)
 	}
 
+    protected static String collapse(String expandedValue){
+        def envStart = PolicyExpander.ENV_START
+        return expandedValue.replace(JBOSS_HOME, "\${${envStart}${JBOSS_HOME_KEY}}")
+    }
+    
     def static int noOfPermissions(Node root){
         NodeList permissions = getPermissionsNode(root)
         return permissions.size()
