@@ -6,7 +6,7 @@ class LogParser{
     //https://regex101.com/r/dT1bV4/3
     //This regex using negative lookahead to avoid terminating matches in name group that contain a '"' character
     //http://stackoverflow.com/questions/406230/regular-expression-to-match-line-that-doesnt-contain-a-word
-    private static Pattern p = ~/(?i)permission\s"\("(?<clazz>[^"]*+)"\s"(?<name>((?!"\s).)+)"(?:\s"(?<action>[^"]*+)")?\)[\sa-zA-Z:\/\("-]*modules\/system\/layers\/base\/(?<module>[a-z\/]*)\/main/
+    private static Pattern p = ~/(?i)permission\s"\("(?<clazz>[^"]*+)"\s"(?<name>((?!"\s).)+)"(?:\s"(?<action>[^"]*+)")?\)[\sa-zA-Z:\/\("-]*modules\/system\/layers\/base\/(?<module>[a-z0-9\/-]*)\/main/
     private static Matcher m = null
 
 

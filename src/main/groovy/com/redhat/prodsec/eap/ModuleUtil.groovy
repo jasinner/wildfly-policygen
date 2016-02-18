@@ -74,7 +74,7 @@ class ModuleUtil{
         def envStart = PolicyExpander.ENV_START
         return expandedValue.replace(JBOSS_HOME, "\${${envStart}${JBOSS_HOME_KEY}}")
     }
-    
+
     def static int noOfPermissions(Node root){
         NodeList permissions = getPermissionsNode(root)
         return permissions.size()
@@ -103,11 +103,12 @@ class ModuleUtil{
         def grants = root.permissions.grant
         Set results = new HashSet<Permission>()
         grants.each{
-            results.add(PermissionFactory.createPermission(
+            def permission = PermissionFactory.createPermission(
                 it.@permission,
                 it.@name,
                 it.@actions)
-            )
+            if(permission != null)
+                results.add(permission)
         }
         return results
     }

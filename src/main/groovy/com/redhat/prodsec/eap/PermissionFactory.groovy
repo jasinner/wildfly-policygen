@@ -11,7 +11,7 @@ class PermissionFactory {
 	def static Permission createPermission(String permissionClass, String name, String actions){
 		Class<? extends Permission> clazz;
         String expandedName = PolicyExpander.expand(name)
-        //If a property can't be expanded in a grant entry, permission entry, or keystore entry, that entry is ignored. 
+        //If a property can't be expanded in a grant entry, permission entry, or keystore entry, that entry is ignored.
         //Ref: https://docs.oracle.com/javase/8/docs/technotes/guides/security/PolicyFiles.html#PropertyExp
         if(expandedName == null) {
             log.fine("Could not expand EL Expression in ${name}, ignoring permission")
@@ -19,13 +19,13 @@ class PermissionFactory {
         }
 		try{
 			clazz = Class.forName(permissionClass)
-			 return constructFromClass(clazz, expandedName, actions)
-		} catch(ClassNotFoundException c){
+			return constructFromClass(clazz, expandedName, actions)
+		} catch(Exception e) {
 			//Not a class shipped with JSE, just store Permission class name as String
 			return new GenericPermission(permissionClass, expandedName, actions)
 		}
 	}
-	
+
 	static private Permission constructFromClass(Class permissionClass, String targetName, String permissionActions){
 		final Constructor<? extends Permission> constructor;
 		boolean hasTarget = targetName != null && ! targetName.isEmpty();

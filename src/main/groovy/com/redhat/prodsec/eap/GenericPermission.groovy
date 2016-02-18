@@ -59,13 +59,12 @@ public class GenericPermission extends Permission{
 
     @Override
     public String getActions(){
-        if(actions == null) return
+        if(actions == null || actions.equals('')) return
 		def sb = new StringBuilder();
 		actions.each() {
 			sb.append(it).append(',')
 		}
 		def newActions = sb.toString()
-		println("new Actions ${newActions}")
         return newActions.substring(0, sb.length() -  1);
     }
 
