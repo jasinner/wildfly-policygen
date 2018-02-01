@@ -25,7 +25,7 @@ class ModuleUtil{
         def moduleFile = getModuleFile(modulePath)
         def parser = new XmlParser()
         def module = parser.parse(moduleFile)
-        assert module.name().toString() == "{urn:jboss:module:1.3}module"
+        assert module.name().toString().endsWith("module")
         return module
     }
 
@@ -38,7 +38,7 @@ class ModuleUtil{
     def static Node addPerms(String module, Set<Permission> newPermissions){
         def node = readExistingModule(module)
         if (noOfPermissions(node) == 0) {
-            node.appendNode(new QName("urn:jboss:module:1.3", "permissions"))
+            node.appendNode(new QName("urn:jboss:module:1.5", "permissions"))
         }
         newPermissions.each{ perm->
             asNode(perm, node.permissions)
@@ -80,7 +80,7 @@ class ModuleUtil{
     }
 
     private static NodeList getPermissionsNode(Node root){
-        return root.getAt(new QName("urn:jboss:module:1.3", "permissions"))
+        return root.getAt(new QName("urn:jboss:module:1.5", "permissions"))
     }
 
     def static Set<Permission> buildPermissions(String moduleName){
