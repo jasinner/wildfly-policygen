@@ -7,13 +7,17 @@ import groovy.util.logging.Log
 @Log
 class EntryPoint{
 
+	enum Modes {
+		MODULES, DEPLOYMENT
+	}
 
 	static void main(String[] args) {
 		if(args.length < 1){
-			println("Usage 'groovy com/redhat/prodsec/jboss/Entrypoint.groovy <logpath>'")
+			println("Usage 'groovy com/redhat/prodsec/jboss/Entrypoint.groovy logpath <mode>'")
 			System.exit(1)
 		}
-		Map<String, Set<Permission>> results = parseLog(args[0])
+		def mode = checkMode(args)
+		Map<String, Set<Permission>> results = parseLog(args[0], mode)
 		def moduleToUpdate = results.keySet()
 		moduleToUpdate.each{ module ->
 			Node moduleNode;
@@ -41,9 +45,19 @@ class EntryPoint{
 		}
 	}
 
-	static private Map<String, Set<Permission>> parseLog(String logFile){
+	static Modes checkMode(String[] args) {
+		def s
+		try{
+			s = args[1]
+		}catch(IndexOutOfBoundsException e) {
+			return Modes.DEPLOYMENT
+		}
+		s.toUpperCase() as Modes
+	}
+
+	static private Map<String, Set<Permission>> parseLog(String logFile, Modes mode){
 		assert new File(logFile).isFile()
-		Map<String, Set<Permission>> results = LogParser.parseFile(logFile)
+		Map<String, Set<Permission>> results = new LogParser(mode).parseFile(logFile)
 		log.info "Found ${results.size()} permissions in log ${logFile}."
 		return results;
 	}
