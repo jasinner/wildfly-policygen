@@ -7,7 +7,7 @@ import groovy.util.logging.Log
 @Log
 class EntryPoint{
 
-	enum Modes {
+	static enum Modes {
 		MODULES, DEPLOYMENT
 	}
 
@@ -18,28 +18,40 @@ class EntryPoint{
 		}
 		def mode = checkMode(args)
 		Map<String, Set<Permission>> results = parseLog(args[0], mode)
+		if(mode == Modes.MODULES)
+			updateModules(results)
+		else{
+			generatePermissions(results)
+		}
+	}
+
+	static void generatePermissions(Map<String, Set<Permission>> stringSetMap) {
+		DeploymentUtil.createPermissions(null)
+	}
+
+	private static void updateModules(Map<String, Set<Permission>> results) {
 		def moduleToUpdate = results.keySet()
-		moduleToUpdate.each{ module ->
+		moduleToUpdate.each { module ->
 			Node moduleNode;
-            Set<Permission> permissionsToAdd = results.get(module)
-            log.info("Trying to build permission for ${module}")
+			Set<Permission> permissionsToAdd = results.get(module)
+			log.info("Trying to build permission for ${module}")
 			Set<Permission> existingPerms = ModuleUtil.buildPermissions(module)
-			if(existingPerms == null){
-                log.info("Found no existing permissions in ${module}," +
-                    "adding ${permissionsToAdd.size()} now")
+			if (existingPerms == null) {
+				log.info("Found no existing permissions in ${module}," +
+						"adding ${permissionsToAdd.size()} now")
 				moduleNode = ModuleUtil.addPerms(module, permissionsToAdd)
-			}else{
-                log.info("Found ${existingPerms.size()} existing permissions in ${module}")
-                def unimpliedPermissions = new HashSet<Permission>(results.get(module));
-				existingPerms.each{ existingPerm ->
-					results.get(module).each(){ loggedPermission ->
-						if(existingPerm.implies(loggedPermission)){
+			} else {
+				log.info("Found ${existingPerms.size()} existing permissions in ${module}")
+				def unimpliedPermissions = new HashSet<Permission>(results.get(module));
+				existingPerms.each { existingPerm ->
+					results.get(module).each() { loggedPermission ->
+						if (existingPerm.implies(loggedPermission)) {
 							unimpliedPermissions.remove(loggedPermission)
-                        }
+						}
 					}
-                }
-                log.info("Adding ${unimpliedPermissions.size()} new permissions to ${module}")
-			    moduleNode = ModuleUtil.addPerms(module, unimpliedPermissions)
+				}
+				log.info("Adding ${unimpliedPermissions.size()} new permissions to ${module}")
+				moduleNode = ModuleUtil.addPerms(module, unimpliedPermissions)
 			}
 			XmlPrinter.printNode(moduleNode, ModuleUtil.getModuleFile(module))
 		}
